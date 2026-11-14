@@ -1,0 +1,449 @@
+{
+  "entities": {
+    "ParentProfile": {
+      "title": "ParentProfile",
+      "description": "Registered parent or guardian account profile and assigned student summary.",
+      "type": "object",
+      "properties": {
+        "parentUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the registered parent."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Parent or guardian full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 150,
+          "description": "Verified email address of the parent."
+        },
+        "childName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Student full name or first name."
+        },
+        "studentClass": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Student class level (e.g., Primary 5, JSS 2)."
+        },
+        "assignedTutor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Lead BrightPath home tutor assigned to the student."
+        },
+        "assignedTutorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Optional Firebase Auth UID of the assigned BrightPath tutor."
+        },
+        "registeredAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the parent profile was registered."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the latest profile update."
+        }
+      },
+      "required": [
+        "parentUid",
+        "displayName",
+        "email",
+        "childName",
+        "studentClass",
+        "assignedTutor",
+        "registeredAt",
+        "updatedAt"
+      ]
+    },
+    "StudentRoster": {
+      "title": "StudentRoster",
+      "description": "Non-PII student roster record enabling assigned tutors to manage session logs and reports without reading parent email addresses.",
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Document ID matching the owning parent's Firebase Auth UID."
+        },
+        "parentUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the owning parent."
+        },
+        "studentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Name of the student."
+        },
+        "studentClass": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Class level of the student."
+        },
+        "parentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Display name of the parent or guardian (no PII contact details)."
+        },
+        "assignedTutor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Assigned BrightPath tutor display name."
+        },
+        "assignedTutorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Optional Firebase Auth UID of the assigned tutor."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the student roster entry was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the latest update."
+        }
+      },
+      "required": [
+        "studentId",
+        "parentUid",
+        "studentName",
+        "studentClass",
+        "parentName",
+        "assignedTutor",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TutorAccount": {
+      "title": "TutorAccount",
+      "description": "Coordinator-authorized BrightPath tutor account controlling access to the Tutor Dashboard.",
+      "type": "object",
+      "properties": {
+        "tutorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the authorized tutor."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Tutor full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 150,
+          "description": "Tutor Google account email."
+        },
+        "specialty": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Primary tutoring subjects and grade focus."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether this tutor currently has active dashboard access."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when tutor access was granted."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when tutor access was last updated."
+        }
+      },
+      "required": [
+        "tutorUid",
+        "displayName",
+        "email",
+        "specialty",
+        "active",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ProgressReport": {
+      "title": "ProgressReport",
+      "description": "Academic progress report and tutor notes issued for a student under a registered parent account.",
+      "type": "object",
+      "properties": {
+        "parentUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the owning parent."
+        },
+        "tutorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Optional Firebase Auth UID of the tutor who attached the report."
+        },
+        "studentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Name of the student evaluated in this report."
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Academic subject or learning focus."
+        },
+        "term": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Academic term and assessment period."
+        },
+        "assessmentScore": {
+          "type": "number",
+          "description": "Latest diagnostic or topic quiz score (0 to 100)."
+        },
+        "tutorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Name of the BrightPath tutor authoring the note."
+        },
+        "tutorNotes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500,
+          "description": "Detailed tutor observations covering strengths, homework discipline, and mastery."
+        },
+        "nextFocus": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400,
+          "description": "Planned next learning focus for upcoming home visits."
+        },
+        "attachmentTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Optional label for an attached assessment sheet or study pack."
+        },
+        "attachmentUrl": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 300,
+          "pattern": "^https://.*$",
+          "description": "Optional HTTPS link to an external progress report PDF or study worksheet."
+        },
+        "reportDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "ISO calendar date (YYYY-MM-DD) of the report."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Published", "Acknowledged"],
+          "description": "Whether the parent has acknowledged the progress report."
+        },
+        "parentReply": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Optional short observation or acknowledgement reply from the parent."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the report was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the report was last updated."
+        }
+      },
+      "required": [
+        "parentUid",
+        "studentName",
+        "subject",
+        "term",
+        "assessmentScore",
+        "tutorName",
+        "tutorNotes",
+        "nextFocus",
+        "reportDate",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SessionLog": {
+      "title": "SessionLog",
+      "description": "Tutoring session log recording date, duration, attendance, topics covered, and homework assigned.",
+      "type": "object",
+      "properties": {
+        "parentUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the owning parent."
+        },
+        "tutorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the tutor who logged the session."
+        },
+        "tutorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Display name of the tutor."
+        },
+        "studentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Name of the tutored student."
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Subject covered during the session."
+        },
+        "sessionDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "ISO calendar date (YYYY-MM-DD) of the home tutoring visit."
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "Lesson duration in minutes (15 to 240)."
+        },
+        "attendance": {
+          "type": "string",
+          "enum": ["Completed", "Rescheduled", "Missed"],
+          "description": "Attendance and completion status of the scheduled lesson."
+        },
+        "topicsCovered": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800,
+          "description": "Key concepts and exercises worked through during the lesson."
+        },
+        "homeworkAssigned": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Practice tasks assigned before the next visit."
+        },
+        "sessionNotes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "Tutor remarks on concentration, pacing, and readiness."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the session log was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the session log was last updated."
+        }
+      },
+      "required": [
+        "parentUid",
+        "tutorUid",
+        "tutorName",
+        "studentName",
+        "subject",
+        "sessionDate",
+        "durationMinutes",
+        "attendance",
+        "topicsCovered",
+        "homeworkAssigned",
+        "sessionNotes",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/parents/{parentId}": {
+      "schema": {
+        "$ref": "#/entities/ParentProfile"
+      },
+      "description": "Private parent profile documents containing parent email PII, strictly isolated to owning parent and coordinator."
+    },
+    "/students/{studentId}": {
+      "schema": {
+        "$ref": "#/entities/StudentRoster"
+      },
+      "description": "Non-PII student roster entries keyed by parentUid so assigned tutors can select students without reading parent emails."
+    },
+    "/tutors/{tutorId}": {
+      "schema": {
+        "$ref": "#/entities/TutorAccount"
+      },
+      "description": "Coordinator-managed registry of approved tutors allowed to use the Tutor Dashboard."
+    },
+    "/parents/{parentId}/progressReports/{reportId}": {
+      "schema": {
+        "$ref": "#/entities/ProgressReport"
+      },
+      "description": "Child progress reports and tutor notes scoped to the owning parent, assigned tutor, and coordinator."
+    },
+    "/parents/{parentId}/sessionLogs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/SessionLog"
+      },
+      "description": "Home tutoring session logs authored and updated by assigned tutors or coordinator for a specific student."
+    }
+  }
+}
