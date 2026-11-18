@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, type Response } from 'express';
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
@@ -59,9 +60,88 @@ interface IncomingChatMessage {
   text: string;
 }
 
+interface IncomingEnquiry {
+  name?: string;
+  email?: string;
+  phone?: string;
+  studentClass?: string;
+  message?: string;
+  botField?: string;
+  'bot-field'?: string;
+  'form-name'?: string;
+}
+
+async function handleContactEnquiry(req: Request, res: Response) {
+  const body = (req.body || {}) as IncomingEnquiry;
+  const botValue = String(body.botField ?? body['bot-field'] ?? '').trim();
+
+  if (botValue.length > 0) {
+    res.status(200).json({ ok: true, referenceId: 'BP-RECEIVED' });
+    return;
+  }
+
+  const name = String(body.name ?? '').trim().slice(0, 120);
+  const email = String(body.email ?? '').trim().slice(0, 160);
+  const phone = String(body.phone ?? '').trim().slice(0, 40);
+  const studentClass = String(body.studentClass ?? '').trim().slice(0, 100);
+  const message = String(body.message ?? '').trim().slice(0, 2000);
+
+  if (!name) {
+    res.status(400).json({ error: 'Please enter your full name.' });
+    return;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    res.status(400).json({ error: 'Please enter a valid email address.' });
+    return;
+  }
+  if (!phone || phone.replace(/\D/g, '').length < 7) {
+    res.status(400).json({ error: 'Please enter a valid phone or WhatsApp number.' });
+    return;
+  }
+  if (!studentClass) {
+    res.status(400).json({ error: 'Please select the student’s class.' });
+    return;
+  }
+  if (!message) {
+    res.status(400).json({ error: 'Please share the subjects needed and preferred schedule.' });
+    return;
+  }
+
+  const referenceId = `BP-${Date.now().toString(36).toUpperCase()}`;
+  const record = {
+    referenceId,
+    name,
+    email,
+    phone,
+    studentClass,
+    message,
+    submittedAt: new Date().toISOString(),
+  };
+
+  try {
+    const dataDir = path.resolve(__dirname, 'data');
+    await fs.mkdir(dataDir, { recursive: true });
+    await fs.appendFile(path.join(dataDir, 'enquiries.jsonl'), `${JSON.stringify(record)}\n`, 'utf8');
+  } catch {
+    // Non-fatal if container filesystem is read-only
+  }
+
+  console.info(`New BrightPath enquiry received [${referenceId}] for ${studentClass}`);
+  res.status(200).json({ ok: true, referenceId });
+}
+
 async function startServer() {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
+  app.use(express.urlencoded({ extended: false, limit: '100kb' }));
+
+  app.post('/api/contact', (req: Request, res: Response) => {
+    void handleContactEnquiry(req, res);
+  });
+
+  app.post('/', (req: Request, res: Response) => {
+    void handleContactEnquiry(req, res);
+  });
 
   app.post('/api/chat', async (req: Request, res: Response) => {
     const apiKey = process.env.GEMINI_API_KEY;

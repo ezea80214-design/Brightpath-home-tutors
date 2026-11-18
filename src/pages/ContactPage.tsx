@@ -41,6 +41,12 @@ export function ContactPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [referenceId, setReferenceId] = useState<string | null>(null);
+  const [lastEnquirySummary, setLastEnquirySummary] = useState<{
+    name: string;
+    studentClass: string;
+    message: string;
+  } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -92,25 +98,55 @@ export function ContactPage() {
     }
 
     setSubmitting(true);
+    const payload = {
+      name: formState.name.trim(),
+      email: formState.email.trim(),
+      phone: formState.phone.trim(),
+      studentClass: formState.studentClass.trim(),
+      message: formState.message.trim(),
+      botField: formState.botField,
+    };
+
     try {
-      const response = await fetch('/', {
+      let confirmedRef: string | null = null;
+      const apiResponse = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encodeFormData({
-          'form-name': 'contact',
-          'bot-field': formState.botField,
-          name: formState.name.trim(),
-          email: formState.email.trim(),
-          phone: formState.phone.trim(),
-          studentClass: formState.studentClass.trim(),
-          message: formState.message.trim(),
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error('Submission response was not ok');
+      if (apiResponse.ok) {
+        const data = (await apiResponse.json()) as { ok?: boolean; referenceId?: string };
+        confirmedRef = data.referenceId || null;
+      } else if (apiResponse.status === 404 || apiResponse.status === 405) {
+        // Static Netlify hosting fallback
+        const netlifyResponse = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: encodeFormData({
+            'form-name': 'contact',
+            'bot-field': payload.botField,
+            name: payload.name,
+            email: payload.email,
+            phone: payload.phone,
+            studentClass: payload.studentClass,
+            message: payload.message,
+          }),
+        });
+        if (!netlifyResponse.ok) {
+          throw new Error('Submission response was not ok');
+        }
+      } else {
+        const errData = (await apiResponse.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(errData?.error || 'Submission response was not ok');
       }
 
+      setReferenceId(confirmedRef);
+      setLastEnquirySummary({
+        name: payload.name,
+        studentClass: payload.studentClass,
+        message: payload.message,
+      });
       setSubmitted(true);
       setFormState({
         name: '',
@@ -120,10 +156,11 @@ export function ContactPage() {
         message: '',
         botField: '',
       });
-    } catch {
-      setSubmitError(
-        `We could not transmit the web form right now. Please message us directly on WhatsApp (${siteConfig.contact.whatsapp}) or call ${siteConfig.contact.phone}.`
-      );
+    } catch (err) {
+      const msg = err instanceof Error && err.message !== 'Submission response was not ok'
+        ? err.message
+        : `We could not transmit the web form right now. Please message us directly on WhatsApp (${siteConfig.contact.whatsapp}) or call ${siteConfig.contact.phone}.`;
+      setSubmitError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -154,10 +191,10 @@ export function ContactPage() {
       </section>
 
       {/* Main Content */}
-      <section id="enquiry" className="py-14 sm:py-16 bg-white">
+      <section id="enquiry" className="scroll-mt-20 py-14 sm:py-16 bg-white">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
-            {/* Netlify Forms Compatible Enquiry Form */}
+            {/* Enquiry Form */}
             <div className="lg:col-span-7 p-6 sm:p-10 rounded-xl border border-slate-200 bg-white">
               <div className="space-y-2 pb-6 border-b border-slate-200">
                 <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0B1F3A]">
@@ -182,15 +219,37 @@ export function ContactPage() {
                       <h3 className="font-display text-xl font-bold text-[#0B1F3A]">
                         Thank You — Enquiry Received
                       </h3>
+                      {referenceId && (
+                        <p className="text-xs font-semibold text-[#8C6A1B] tabular-nums">
+                          Reference: {referenceId}
+                        </p>
+                      )}
                       <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
                         Your tutoring enquiry has been submitted to BrightPath Home Tutors. We will contact you shortly via phone, WhatsApp, or email to discuss your child’s class and lesson schedule.
                       </p>
                     </div>
                   </div>
-                  <div className="pt-2">
+                  <div className="pt-2 flex flex-wrap items-center gap-3">
+                    {lastEnquirySummary && (
+                      <a
+                        href={buildWhatsAppUrl(
+                          siteConfig.contact.whatsapp,
+                          `Hello BrightPath Home Tutors, I just submitted an enquiry${referenceId ? ` (${referenceId})` : ''} for ${lastEnquirySummary.studentClass}. Name: ${lastEnquirySummary.name}. ${lastEnquirySummary.message}`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#0B1F3A] rounded-lg hover:bg-[#132E53] transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4 text-[#D8B45A]" aria-hidden="true" />
+                        <span>Also Send on WhatsApp</span>
+                      </a>
+                    )}
                     <button
                       type="button"
-                      onClick={() => setSubmitted(false)}
+                      onClick={() => {
+                        setSubmitted(false);
+                        setReferenceId(null);
+                      }}
                       className="px-5 py-2.5 text-sm font-semibold text-[#0B1F3A] bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
                     >
                       Send Another Enquiry

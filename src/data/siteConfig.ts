@@ -37,7 +37,7 @@ export const siteConfig = {
   // --------------------------------------------------------------------------
   contact: {
     phone: '08060677222',
-    whatsapp: '0806060677222',
+    whatsapp: '08060677222',
     email: 'ezea80214@gmail.com',
     address: '125 Itire Road, Lawson, Surulere, Lagos, Nigeria',
     // Editable Business Hours placeholders
